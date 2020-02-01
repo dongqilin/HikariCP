@@ -33,6 +33,8 @@ import org.slf4j.LoggerFactory;
 public final class DriverDataSource implements DataSource
 {
    private static final Logger LOGGER = LoggerFactory.getLogger(DriverDataSource.class);
+   private static final String PASSWORD = "password";
+   private static final String USER = "user";
 
    private final String jdbcUrl;
    private final Properties driverProperties;
@@ -48,10 +50,10 @@ public final class DriverDataSource implements DataSource
       }
 
       if (username != null) {
-         driverProperties.put("user", driverProperties.getProperty("user", username));
+         driverProperties.put(USER, driverProperties.getProperty("user", username));
       }
       if (password != null) {
-         driverProperties.put("password", driverProperties.getProperty("password", password));
+         driverProperties.put(PASSWORD, driverProperties.getProperty("password", password));
       }
 
       if (driverClassName != null) {
@@ -120,9 +122,20 @@ public final class DriverDataSource implements DataSource
    }
 
    @Override
-   public Connection getConnection(String username, String password) throws SQLException
+   public Connection getConnection(final String username, final String password) throws SQLException
    {
-      return getConnection();
+      final Properties cloned = (Properties) driverProperties.clone();
+      if (username != null) {
+         cloned.put("user", username);
+         if (cloned.containsKey("username")) {
+            cloned.put("username", username);
+         }
+      }
+      if (password != null) {
+         cloned.put("password", password);
+      }
+
+      return driver.connect(jdbcUrl, cloned);
    }
 
    @Override
